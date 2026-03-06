@@ -40,7 +40,7 @@ import product from '../../../../platform/product/common/product.js';
 import { IProductService } from '../../../../platform/product/common/productService.js';
 import { ProgressLocation } from '../../../../platform/progress/common/progress.js';
 import { Extensions, IQuickAccessRegistry } from '../../../../platform/quickinput/common/quickAccess.js';
-import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
+import { IQuickInputService, IQuickPickItem } from '../../../../platform/quickinput/common/quickInput.js';
 import { Registry } from '../../../../platform/registry/common/platform.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
@@ -68,6 +68,7 @@ import { IWebview } from '../../webview/browser/webview.js';
 import { Query } from '../common/extensionQuery.js';
 import { AutoRestartConfigurationKey, AutoUpdateConfigurationKey, CONTEXT_EXTENSIONS_GALLERY_STATUS, CONTEXT_HAS_GALLERY, DefaultViewsContext, ExtensionEditorTab, ExtensionRuntimeActionType, EXTENSIONS_CATEGORY, extensionsFilterSubMenu, extensionsSearchActionsMenu, HasOutdatedExtensionsContext, IExtensionArg, IExtensionsViewPaneContainer, IExtensionsWorkbenchService, INSTALL_ACTIONS_GROUP, INSTALL_EXTENSION_FROM_VSIX_COMMAND_ID, IWorkspaceRecommendedExtensionsView, LIST_WORKSPACE_UNSUPPORTED_EXTENSIONS_COMMAND_ID, OUTDATED_EXTENSIONS_VIEW_ID, SELECT_INSTALL_VSIX_EXTENSION_COMMAND_ID, THEME_ACTIONS_GROUP, TOGGLE_IGNORE_EXTENSION_ACTION_ID, UPDATE_ACTIONS_GROUP, VIEWLET_ID, WORKSPACE_RECOMMENDATIONS_VIEW_ID } from '../common/extensions.js';
 import { ExtensionsConfigurationSchema, ExtensionsConfigurationSchemaId } from '../common/extensionsFileTemplate.js';
+import { IMarketplaceEligibilityService } from '../../../services/extensionManagement/common/marketplaceEligibility.js';
 import { ExtensionsInput } from '../common/extensionsInput.js';
 import { KeymapExtensions } from '../common/extensionsUtils.js';
 import { SearchExtensionsTool, SearchExtensionsToolData } from '../common/searchExtensionsTool.js';
@@ -2067,12 +2068,44 @@ registerAction2(class ExtensionsGallerySignInAction extends Action2 {
 			title: localize2('signInToMarketplace', 'Sign in to access Extensions Marketplace'),
 			menu: {
 				id: MenuId.AccountsContext,
-				when: CONTEXT_EXTENSIONS_GALLERY_STATUS.isEqualTo(ExtensionGalleryManifestStatus.RequiresSignIn)
+				when: ContextKeyExpr.or(
+					CONTEXT_EXTENSIONS_GALLERY_STATUS.isEqualTo(ExtensionGalleryManifestStatus.RequiresSignIn),
+					CONTEXT_EXTENSIONS_GALLERY_STATUS.isEqualTo(ExtensionGalleryManifestStatus.AccessDenied),
+				)
 			},
 		});
 	}
-	run(accessor: ServicesAccessor): Promise<void> {
-		return accessor.get(ICommandService).executeCommand(DEFAULT_ACCOUNT_SIGN_IN_COMMAND);
+	async run(accessor: ServicesAccessor): Promise<void> {
+		const quickInputService = accessor.get(IQuickInputService);
+		const commandService = accessor.get(ICommandService);
+		const eligibilityService = accessor.get(IMarketplaceEligibilityService);
+
+		const picks: IQuickPickItem[] = [
+			{
+				id: 'github',
+				label: '$(github) GitHub',
+				detail: localize('signInGitHub', 'Sign in with your GitHub account'),
+			},
+			{
+				id: 'microsoft',
+				label: '$(azure) Microsoft',
+				detail: localize('signInMicrosoft', 'Work, school, or personal account'),
+			},
+		];
+
+		const pick = await quickInputService.pick(picks, {
+			placeHolder: localize('selectProvider', 'Select an account to sign in with'),
+		});
+
+		if (!pick) {
+			return;
+		}
+
+		if (pick.id === 'github') {
+			await commandService.executeCommand(DEFAULT_ACCOUNT_SIGN_IN_COMMAND);
+		} else {
+			await eligibilityService.signInWithMicrosoft();
+		}
 	}
 });
 
