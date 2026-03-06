@@ -24,7 +24,7 @@ import { IDefaultAccountService } from '../../../../platform/defaultAccount/comm
 import { IRemoteAgentService } from '../../remote/common/remoteAgentService.js';
 import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IHostService } from '../../host/browser/host.js';
-import { IDefaultAccount } from '../../../../base/common/defaultAccount.js';
+import { IMarketplaceEligibilityService, MarketplaceEligibilityReason } from '../common/marketplaceEligibility.js';
 
 export class WorkbenchExtensionGalleryManifestService extends ExtensionGalleryManifestService implements IExtensionGalleryManifestService {
 
@@ -53,6 +53,7 @@ export class WorkbenchExtensionGalleryManifestService extends ExtensionGalleryMa
 		@ILogService private readonly logService: ILogService,
 		@IDialogService private readonly dialogService: IDialogService,
 		@IHostService private readonly hostService: IHostService,
+		@IMarketplaceEligibilityService private readonly marketplaceEligibilityService: IMarketplaceEligibilityService,
 	) {
 		super(productService);
 		this.commonHeadersPromise = resolveMarketplaceHeaders(
@@ -91,8 +92,9 @@ export class WorkbenchExtensionGalleryManifestService extends ExtensionGalleryMa
 
 		const configuredServiceUrl = this.configurationService.getValue<string>(ExtensionGalleryServiceUrlConfigKey);
 		if (configuredServiceUrl) {
-			await this.handleDefaultAccountAccess(configuredServiceUrl);
-			this._register(this.defaultAccountService.onDidChangeDefaultAccount(() => this.handleDefaultAccountAccess(configuredServiceUrl)));
+			await this.handleEligibilityAccess(configuredServiceUrl);
+			this._register(this.defaultAccountService.onDidChangeDefaultAccount(() => this.handleEligibilityAccess(configuredServiceUrl)));
+			this._register(this.marketplaceEligibilityService.onDidChangeEligibility(() => this.handleEligibilityAccess(configuredServiceUrl)));
 		} else {
 			const defaultExtensionGalleryManifest = await super.getExtensionGalleryManifest();
 			this.update(defaultExtensionGalleryManifest);
@@ -106,15 +108,20 @@ export class WorkbenchExtensionGalleryManifestService extends ExtensionGalleryMa
 		}));
 	}
 
-	private async handleDefaultAccountAccess(configuredServiceUrl: string): Promise<void> {
-		const account = await this.defaultAccountService.getDefaultAccount();
+	private async handleEligibilityAccess(configuredServiceUrl: string): Promise<void> {
+		const eligibility = await this.marketplaceEligibilityService.checkEligibility();
 
-		if (!account) {
-			this.logService.debug('[Marketplace] Enterprise marketplace configured but user not signed in');
-			this.update(null, ExtensionGalleryManifestStatus.RequiresSignIn);
-		} else if (!this.checkAccess(account)) {
-			this.logService.debug('[Marketplace] User signed in but lacks access to enterprise marketplace');
-			this.update(null, ExtensionGalleryManifestStatus.AccessDenied);
+		if (!eligibility.eligible) {
+			// Determine if this is "no accounts at all" vs "has accounts but none eligible"
+			const account = await this.defaultAccountService.getDefaultAccount();
+			const hasMicrosoftSession = this.marketplaceEligibilityService.hasMicrosoftSession;
+			if (!account && !hasMicrosoftSession) {
+				this.logService.debug('[Marketplace] Enterprise marketplace configured but user not signed in');
+				this.update(null, ExtensionGalleryManifestStatus.RequiresSignIn);
+			} else {
+				this.logService.debug('[Marketplace] User signed in but lacks access to enterprise marketplace', eligibility.reason);
+				this.update(null, ExtensionGalleryManifestStatus.AccessDenied);
+			}
 		} else if (this.currentStatus !== ExtensionGalleryManifestStatus.Available) {
 			try {
 				const manifest = await this.getExtensionGalleryManifestFromServiceUrl(configuredServiceUrl);
@@ -145,16 +152,6 @@ export class WorkbenchExtensionGalleryManifestService extends ExtensionGalleryMa
 			this.currentStatus = status;
 			this._onDidChangeExtensionGalleryManifestStatus.fire(status);
 		}
-	}
-
-	private checkAccess(account: IDefaultAccount): boolean {
-		this.logService.debug('[Marketplace] Checking Account SKU access for configured gallery', account.entitlementsData?.access_type_sku);
-		if (account.entitlementsData?.access_type_sku && this.productService.extensionsGallery?.accessSKUs?.includes(account.entitlementsData.access_type_sku)) {
-			this.logService.debug('[Marketplace] Account has access to configured gallery');
-			return true;
-		}
-		this.logService.debug('[Marketplace] Checking enterprise account access for configured gallery', account.enterprise);
-		return account.enterprise;
 	}
 
 	private async requestRestart(): Promise<void> {
