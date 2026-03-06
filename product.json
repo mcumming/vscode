@@ -154,6 +154,7 @@
 		],
 		"github-enterprise": [
 			"GitHub.copilot-chat"
-		]
+		],
+		"microsoft": []
 	}
 }
