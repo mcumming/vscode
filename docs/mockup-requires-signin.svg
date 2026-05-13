@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="410" height="200" viewBox="0 0 410 200">
+  <defs>
+    <style>
+      text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- Panel background -->
+  <rect width="410" height="200" fill="#181818"/>
+  <!-- Header bar -->
+  <rect width="410" height="36" fill="#181818"/>
+  <text x="16" y="23" fill="#cccccc" font-size="11" font-weight="400" letter-spacing="0.8">EXTENSIONS</text>
+  <!-- Header icons (refresh, more) -->
+  <circle cx="362" cy="16" r="8" fill="transparent"/>
+  <path d="M358,16 A4,4 0 1,1 366,16" fill="none" stroke="#cccccc" stroke-width="1.2"/>
+  <polygon points="366,14 368,16 364,16" fill="#cccccc"/>
+  <circle cx="386" cy="12" r="1.3" fill="#cccccc"/>
+  <circle cx="386" cy="16" r="1.3" fill="#cccccc"/>
+  <circle cx="386" cy="20" r="1.3" fill="#cccccc"/>
+  <!-- Search bar -->
+  <rect x="8" y="38" width="394" height="26" rx="3" fill="#313131" stroke="#3c3c3c" stroke-width="0.5"/>
+  <text x="16" y="55" fill="#8a8a8a" font-size="12">Search Extensions in Marketplace</text>
+  <!-- Search bar right icons (filter, sort) -->
+  <line x1="365" y1="46" x2="371" y2="56" stroke="#8a8a8a" stroke-width="1.2"/>
+  <line x1="371" y1="46" x2="377" y2="56" stroke="#8a8a8a" stroke-width="1.2"/>
+  <line x1="365" y1="50" x2="377" y2="50" stroke="#8a8a8a" stroke-width="1.2"/>
+  <line x1="383" y1="46" x2="383" y2="57" stroke="#8a8a8a" stroke-width="1.2"/>
+  <line x1="383" y1="46" x2="389" y2="52" stroke="#8a8a8a" stroke-width="1.2"/>
+  <line x1="383" y1="46" x2="377" y2="52" stroke="#8a8a8a" stroke-width="1.2"/>
+  <!-- Marketplace section header -->
+  <rect y="72" width="410" height="24" fill="#181818"/>
+  <polygon points="8,82 14,86 8,90" fill="#cccccc"/>
+  <text x="20" y="88" fill="#cccccc" font-size="11" font-weight="600" letter-spacing="0.3">MARKETPLACE</text>
+  <!-- Divider -->
+  <line x1="0" y1="96" x2="410" y2="96" stroke="#2d2d2d" stroke-width="1"/>
+  <!-- Content area -->
+  <rect y="96" width="410" height="104" fill="#1e1e1e"/>
+  <!-- Sign-in button -->
+  <rect x="24" y="120" width="362" height="30" rx="2" fill="#0e639c"/>
+  <text x="205" y="140" fill="#ffffff" font-size="12" text-anchor="middle">Sign in to access Extensions Marketplace</text>
+</svg>

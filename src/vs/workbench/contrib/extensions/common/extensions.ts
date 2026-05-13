@@ -263,10 +263,7 @@ export const SearchMcpServersContext = new RawContextKey<boolean>('searchMcpServ
 export const SearchAgentPluginsContext = new RawContextKey<boolean>('searchAgentPlugins', false);
 
 // Marketplace Eligibility Context Keys
-export const CONTEXT_MARKETPLACE_ELIGIBILITY_CHECKED = new RawContextKey<boolean>('marketplaceEligibilityChecked', false);
-export const CONTEXT_MARKETPLACE_ELIGIBLE_VIA_GITHUB = new RawContextKey<boolean>('marketplaceEligibleViaGitHub', false);
-export const CONTEXT_MARKETPLACE_ELIGIBLE_VIA_MICROSOFT = new RawContextKey<boolean>('marketplaceEligibleViaMicrosoft', false);
-export const CONTEXT_MARKETPLACE_ELIGIBLE_VIA_VSS = new RawContextKey<boolean>('marketplaceEligibleViaVSS', false);
+export const CONTEXT_MARKETPLACE_AUTH_PROVIDER = new RawContextKey<string>('marketplaceAuthProvider', '');
 
 // Context Menu Groups
 export const THEME_ACTIONS_GROUP = '_theme_';

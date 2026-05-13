@@ -111,8 +111,6 @@ export interface IProductConfiguration {
 		readonly resourceUrlTemplate: string;
 		readonly nlsBaseUrl: string;
 		readonly accessSKUs?: string[];
-		readonly eligibilityUrl?: string;
-		readonly microsoftAuthScopes?: string[];
 	};
 
 	readonly mcpGallery?: {

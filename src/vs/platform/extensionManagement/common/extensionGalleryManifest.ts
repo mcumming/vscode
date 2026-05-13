@@ -15,6 +15,7 @@ export const enum ExtensionGalleryResourceType {
 	ExtensionRatingViewUri = 'ExtensionRatingViewUriTemplate',
 	ExtensionResourceUri = 'ExtensionResourceUriTemplate',
 	ContactSupportUri = 'ContactSupportUri',
+	EligibilityService = 'EligibilityService',
 }
 
 export const enum Flag {
@@ -98,3 +99,5 @@ export function getExtensionGalleryManifestResourceUri(manifest: IExtensionGalle
 }
 
 export const ExtensionGalleryServiceUrlConfigKey = 'extensions.gallery.serviceUrl';
+
+export const ExtensionGalleryAuthProviderConfigKey = 'extensions.gallery.authProvider';

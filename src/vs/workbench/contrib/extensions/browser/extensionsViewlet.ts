@@ -16,7 +16,7 @@ import { append, $, Dimension, hide, show, DragAndDropObserver, trackFocus, addD
 import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
 import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { IExtensionService } from '../../../services/extensions/common/extensions.js';
-import { IExtensionsWorkbenchService, IExtensionsViewPaneContainer, VIEWLET_ID, CloseExtensionDetailsOnViewChangeKey, INSTALL_EXTENSION_FROM_VSIX_COMMAND_ID, WORKSPACE_RECOMMENDATIONS_VIEW_ID, AutoCheckUpdatesConfigurationKey, OUTDATED_EXTENSIONS_VIEW_ID, CONTEXT_HAS_GALLERY, extensionsSearchActionsMenu, AutoRestartConfigurationKey, ExtensionRuntimeActionType, SearchMcpServersContext, SearchAgentPluginsContext, DefaultViewsContext, CONTEXT_EXTENSIONS_GALLERY_STATUS, CONTEXT_MARKETPLACE_ELIGIBILITY_CHECKED } from '../common/extensions.js';
+import { IExtensionsWorkbenchService, IExtensionsViewPaneContainer, VIEWLET_ID, CloseExtensionDetailsOnViewChangeKey, INSTALL_EXTENSION_FROM_VSIX_COMMAND_ID, WORKSPACE_RECOMMENDATIONS_VIEW_ID, AutoCheckUpdatesConfigurationKey, OUTDATED_EXTENSIONS_VIEW_ID, CONTEXT_HAS_GALLERY, extensionsSearchActionsMenu, AutoRestartConfigurationKey, ExtensionRuntimeActionType, SearchMcpServersContext, SearchAgentPluginsContext, DefaultViewsContext, CONTEXT_EXTENSIONS_GALLERY_STATUS, CONTEXT_MARKETPLACE_AUTH_PROVIDER } from '../common/extensions.js';
 import { InstallLocalExtensionsInRemoteAction, InstallRemoteExtensionsInLocalAction } from './extensionsActions.js';
 import { IExtensionManagementService, ILocalExtension } from '../../../../platform/extensionManagement/common/extensionManagement.js';
 import { IWorkbenchExtensionEnablementService, IExtensionManagementServerService, IExtensionManagementServer } from '../../../services/extensionManagement/common/extensionManagement.js';
@@ -151,23 +151,40 @@ export class ExtensionsViewletViewsContribution extends Disposable implements IW
 		viewRegistry.registerViews(viewDescriptors, this.container);
 
 		viewRegistry.registerViewWelcomeContent('workbench.views.extensions.marketplaceAccess', {
-			content: localize('sign in', "[Sign in to access Extensions Marketplace]({0})", `command:workbench.extensions.actions.gallery.signIn`),
-			when: CONTEXT_EXTENSIONS_GALLERY_STATUS.isEqualTo(ExtensionGalleryManifestStatus.RequiresSignIn)
-		});
-
-		viewRegistry.registerViewWelcomeContent('workbench.views.extensions.marketplaceAccess', {
-			content: localize('access denied try another', "Your account does not have access to the Extensions Marketplace. [Try signing in with a different account]({0}).", `command:workbench.extensions.actions.gallery.signIn`),
+			content: localize('sign in microsoft', "[Sign in with your Microsoft account]({0}) to access the Extensions Marketplace.", `command:workbench.extensions.actions.gallery.signIn`),
 			when: ContextKeyExpr.and(
-				CONTEXT_EXTENSIONS_GALLERY_STATUS.isEqualTo(ExtensionGalleryManifestStatus.AccessDenied),
-				CONTEXT_MARKETPLACE_ELIGIBILITY_CHECKED
+				CONTEXT_EXTENSIONS_GALLERY_STATUS.isEqualTo(ExtensionGalleryManifestStatus.RequiresSignIn),
+				CONTEXT_MARKETPLACE_AUTH_PROVIDER.isEqualTo('microsoft')
 			)
 		});
 
 		viewRegistry.registerViewWelcomeContent('workbench.views.extensions.marketplaceAccess', {
-			content: localize('access denied no entitlement', "Your account does not have access to the Extensions Marketplace. A GitHub Enterprise, Entra ID (work or school), or Visual Studio Subscription account is required. Please contact your administrator."),
+			content: localize('sign in github', "[Sign in with GitHub]({0}) to access the Extensions Marketplace.", `command:workbench.extensions.actions.gallery.signIn`),
+			when: ContextKeyExpr.and(
+				CONTEXT_EXTENSIONS_GALLERY_STATUS.isEqualTo(ExtensionGalleryManifestStatus.RequiresSignIn),
+				ContextKeyExpr.or(
+					CONTEXT_MARKETPLACE_AUTH_PROVIDER.isEqualTo('github'),
+					ContextKeyExpr.not('marketplaceAuthProvider')
+				)
+			)
+		});
+
+		viewRegistry.registerViewWelcomeContent('workbench.views.extensions.marketplaceAccess', {
+			content: localize('access denied microsoft', "Your Microsoft account does not have access to the Extensions Marketplace. An Entra ID (work or school) account or Visual Studio Subscription is required. Please contact your administrator."),
 			when: ContextKeyExpr.and(
 				CONTEXT_EXTENSIONS_GALLERY_STATUS.isEqualTo(ExtensionGalleryManifestStatus.AccessDenied),
-				ContextKeyExpr.not('marketplaceEligibilityChecked')
+				CONTEXT_MARKETPLACE_AUTH_PROVIDER.isEqualTo('microsoft')
+			)
+		});
+
+		viewRegistry.registerViewWelcomeContent('workbench.views.extensions.marketplaceAccess', {
+			content: localize('access denied github', "Your account does not have access to the Extensions Marketplace. Please contact your administrator."),
+			when: ContextKeyExpr.and(
+				CONTEXT_EXTENSIONS_GALLERY_STATUS.isEqualTo(ExtensionGalleryManifestStatus.AccessDenied),
+				ContextKeyExpr.or(
+					CONTEXT_MARKETPLACE_AUTH_PROVIDER.isEqualTo('github'),
+					ContextKeyExpr.not('marketplaceAuthProvider')
+				)
 			)
 		});
 	}
